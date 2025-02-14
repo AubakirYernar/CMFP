@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 5 - Linear Regression</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-group { margin: 10px 0; }
+        input { padding: 8px; width: 300px; }
+        .plot { max-width: 100%; margin: 20px 0; }
+        .error { color: red; }
+        .result-box { padding: 15px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='task4.html'">Previous</button>
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='task6.html'">Next</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 5: Linear Regression</h2>
+        
+        <div class="input-group">
+            <input type="text" id="points" 
+                   placeholder="Введите точки (формат: 1,2 3,4 5,6 ...)"
+                   style="width: 400px;">
+        </div>
+        
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="error" class="error"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function calculate() {
+            const points = document.getElementById('points').value.split(' ');
+            const data = { points: points.filter(p => p.length > 0) };
+
+            try {
+                const response = await fetch('/task5', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if(result.error) {
+                    document.getElementById('error').innerHTML = result.error;
+                    document.getElementById('result').innerHTML = '';
+                    return;
+                }
+
+                document.getElementById('result').innerHTML = `
+                    <div class="result-box">
+                        <h3>Уравнение регрессии: ${result.equation}</h3>
+                        <img src="${result.plot}" class="plot" alt="Regression plot">
+                    </div>
+                `;
+                document.getElementById('error').innerHTML = '';
+                
+            } catch(error) {
+                document.getElementById('error').innerHTML = error.message;
+            }
+        }
+    </script>
+</body>
+</html>

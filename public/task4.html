@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 4 - Matrix Inversion</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .matrix-input { display: grid; gap: 5px; margin: 10px 0; }
+        .matrix-cell input { width: 60px; padding: 5px; text-align: center; }
+        .error { color: red; }
+        table { border-collapse: collapse; margin: 10px 0; }
+        td, th { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='task3.html'">Previous</button>
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='task5.html'">Next</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 4: Matrix Inversion</h2>
+        
+        <div class="input-group">
+            <label>Matrix size: </label>
+            <input type="number" id="size" min="2" max="6" value="2">
+            <button onclick="generateMatrix()">Generate Matrix</button>
+        </div>
+
+        <div id="matrix-container"></div>
+        <button onclick="calculate()">Calculate Inverse</button>
+        
+        <div id="error" class="error"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function generateMatrix() {
+            const n = parseInt(document.getElementById('size').value);
+            const container = document.getElementById('matrix-container');
+            container.innerHTML = '';
+            
+            // Создаем таблицу для ввода матрицы
+            const table = document.createElement('table');
+            for(let i = 0; i < n; i++) {
+                const row = document.createElement('tr');
+                for(let j = 0; j < n; j++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'matrix-cell';
+                    cell.innerHTML = `<input type="number" id="m-${i}-${j}" value="${i === j ? 1 : 0}">`;
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            container.appendChild(table);
+        }
+
+        async function calculate() {
+            const n = parseInt(document.getElementById('size').value);
+            const matrix = [];
+            
+            // Собираем матрицу
+            for(let i = 0; i < n; i++) {
+                const row = [];
+                for(let j = 0; j < n; j++) {
+                    row.push(parseFloat(document.getElementById(`m-${i}-${j}`).value));
+                }
+                matrix.push(row);
+            }
+
+            try {
+                const response = await fetch('/task4', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matrix: matrix })
+                });
+                
+                const result = await response.json();
+                
+                if(result.error) {
+                    document.getElementById('error').innerHTML = result.error;
+                    document.getElementById('result').innerHTML = '';
+                    return;
+                }
+
+                // Форматируем результат
+                const formatMatrix = (mat) => 
+                    mat.map(row => 
+                        `<tr>${row.map(v => `<td>${v.toFixed(3)}</td>`).join('')}</tr>`
+                    ).join('');
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>Approximate Inverse:</h3>
+                    <table>${formatMatrix(result.approximate)}</table>
+                    
+                    <h3>Exact Inverse:</h3>
+                    <table>${formatMatrix(result.exact)}</table>
+                    
+                    <h3>Error: ${result.error}</h3>
+                `;
+                
+            } catch(error) {
+                document.getElementById('error').innerHTML = error.message;
+            }
+        }
+        
+        // Инициализация при загрузке
+        generateMatrix();
+    </script>
+</body>
+</html>

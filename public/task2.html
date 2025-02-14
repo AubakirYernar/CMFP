@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 2 - Root Finding</title>
+    <style>
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; }
+        .input-group { margin: 10px 0; }
+        input, select { width: 200px; padding: 5px; margin: 5px; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        .error { color: red; }
+        .result { margin: 20px 0; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='task1.html'">Previous</button>
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='task3.html'">Next</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 2: Quadratic Equation Solver</h2>
+        
+        <div class="input-group">
+            <label>Equation coefficients:</label><br>
+            <input type="number" id="a" step="any" placeholder="a (x²)" required>
+            <input type="number" id="b" step="any" placeholder="b (x)" required>
+            <input type="number" id="c" step="any" placeholder="c" required>
+        </div>
+
+        <div class="input-group">
+            <label>Interval:</label><br>
+            <input type="number" id="interval_start" step="any" placeholder="Start (A)" required>
+            <input type="number" id="interval_end" step="any" placeholder="End (B)" required>
+        </div>
+
+        <div class="input-group">
+            <select id="method">
+                <option value="bisection">Bisection Method</option>
+                <option value="secant">Secant Method</option>
+            </select>
+        </div>
+
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="result" class="result"></div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        async function calculate() {
+            // Clear previous results
+            document.getElementById('error').innerHTML = '';
+            document.getElementById('result').innerHTML = 'Calculating...';
+
+            // Get input values
+            const data = {
+                a: document.getElementById('a').value,
+                b: document.getElementById('b').value,
+                c: document.getElementById('c').value,
+                interval_start: document.getElementById('interval_start').value,
+                interval_end: document.getElementById('interval_end').value,
+                method: document.getElementById('method').value
+            };
+
+            try {
+                const response = await fetch('/task2', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if(result.error) {
+                    document.getElementById('error').innerHTML = result.error;
+                    document.getElementById('result').innerHTML = '';
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        Method: ${data.method.toUpperCase()}<br>
+                        Root: ${result.root ?? 'Not found'}<br>
+                        Iterations: ${result.iterations}
+                    `;
+                }
+                
+            } catch (error) {
+                document.getElementById('error').innerHTML = 'Error: ' + error.message;
+                document.getElementById('result').innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>

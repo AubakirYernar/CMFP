@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 3 - Jacobi Method</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .matrix-input { display: grid; gap: 5px; margin: 10px 0; }
+        .matrix-row { display: flex; gap: 5px; }
+        input { width: 60px; padding: 5px; text-align: center; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        .error { color: red; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        table { border-collapse: collapse; margin: 10px 0; }
+        td, th { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='task2.html'">Previous</button>
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='task4.html'">Next</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 3: Jacobi Method</h2>
+        
+        <div class="input-group">
+            <label>System dimension (n): </label>
+            <input type="number" id="dimension" min="2" max="6" value="2">
+            <button onclick="generateMatrix()">Generate</button>
+        </div>
+
+        <div id="matrix-container"></div>
+        
+        <div class="params">
+            <label>Tolerance: </label>
+            <input type="number" id="tolerance" step="1e-6" value="0.000001">
+            <label>Max iterations: </label>
+            <input type="number" id="max-iter" value="100">
+        </div>
+
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="error" class="error"></div>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function generateMatrix() {
+            const n = parseInt(document.getElementById('dimension').value);
+            const container = document.getElementById('matrix-container');
+            container.innerHTML = '';
+
+            // Matrix A
+            const aDiv = document.createElement('div');
+            aDiv.innerHTML = `<h3>Matrix A (${n}x${n}):</h3>`;
+            for(let i = 0; i < n; i++) {
+                const row = document.createElement('div');
+                row.className = 'matrix-row';
+                for(let j = 0; j < n; j++) {
+                    row.innerHTML += `<input type="number" id="a-${i}-${j}" step="any" value="${i === j ? 2 : 0}">`;
+                }
+                aDiv.appendChild(row);
+            }
+            container.appendChild(aDiv);
+
+            // Vector b
+            const bDiv = document.createElement('div');
+            bDiv.innerHTML = `<h3>Vector b:</h3><div class="matrix-row">`;
+            for(let i = 0; i < n; i++) {
+                bDiv.innerHTML += `<input type="number" id="b-${i}" step="any" value="${i+1}">`;
+            }
+            bDiv.innerHTML += '</div>';
+            container.appendChild(bDiv);
+
+            // Initial guess
+            const x0Div = document.createElement('div');
+            x0Div.innerHTML = `<h3>Initial guess x0:</h3><div class="matrix-row">`;
+            for(let i = 0; i < n; i++) {
+                x0Div.innerHTML += `<input type="number" id="x0-${i}" step="any" value="0">`;
+            }
+            x0Div.innerHTML += '</div>';
+            container.appendChild(x0Div);
+        }
+
+        async function calculate() {
+            const n = parseInt(document.getElementById('dimension').value);
+            const tol = parseFloat(document.getElementById('tolerance').value);
+            const maxIter = parseInt(document.getElementById('max-iter').value);
+            
+            // Collect matrix A
+            const A = [];
+            for(let i = 0; i < n; i++) {
+                const row = [];
+                for(let j = 0; j < n; j++) {
+                    row.push(parseFloat(document.getElementById(`a-${i}-${j}`).value));
+                }
+                A.push(row);
+            }
+            
+            // Collect vector b and x0
+            const b = Array.from({length: n}, (_, i) => 
+                parseFloat(document.getElementById(`b-${i}`).value));
+            const x0 = Array.from({length: n}, (_, i) => 
+                parseFloat(document.getElementById(`x0-${i}`).value));
+
+            const data = {
+                matrix: A,
+                vector: b,
+                initial: x0,
+                tolerance: tol,
+                max_iterations: maxIter
+            };
+
+            try {
+                const response = await fetch('/task3', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if(result.error) {
+                    document.getElementById('error').innerHTML = result.error;
+                    document.getElementById('result').innerHTML = '';
+                } else {
+                    let html = `
+                        <h3>Solution:</h3>
+                        <table>
+                            ${result.solution.map((v, i) => `
+                                <tr>
+                                    <th>x<sub>${i+1}</sub></th>
+                                    <td>${v.toFixed(6)}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                        <p>Iterations: ${result.iterations}</p>
+                    `;
+                    document.getElementById('result').innerHTML = html;
+                    document.getElementById('error').innerHTML = '';
+                }
+            } catch(error) {
+                document.getElementById('error').innerHTML = 'Error: ' + error.message;
+                document.getElementById('result').innerHTML = '';
+            }
+        }
+        
+        // Initial generation
+        generateMatrix();
+    </script>
+</body>
+</html>

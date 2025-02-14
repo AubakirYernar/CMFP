@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 1 - Cubic Equation</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-group { margin: 10px 0; }
+        input { width: 200px; padding: 5px; }
+        .plot { max-width: 100%; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='task2.html'">Next</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 1: Cubic Equation Solver</h2>
+        
+        <div class="input-group">
+            <label>Coefficients:</label><br>
+            <input type="number" id="a" placeholder="a (x³)" step="any" required>
+            <input type="number" id="b" placeholder="b (x²)" step="any" required>
+            <input type="number" id="c" placeholder="c (x)" step="any" required>
+            <input type="number" id="d" placeholder="d" step="any" required>
+        </div>
+        
+        <div class="input-group">
+            <input type="number" id="approx" placeholder="Approximate root" step="any" required>
+        </div>
+
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="result">
+            <div id="plot-container"></div>
+            <pre id="output"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function calculate() {
+            const data = {
+                a: document.getElementById('a').value,
+                b: document.getElementById('b').value,
+                c: document.getElementById('c').value,
+                d: document.getElementById('d').value,
+                approx_root: document.getElementById('approx').value
+            };
+
+            try {
+                const response = await fetch('/task1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                document.getElementById('output').innerHTML = `
+                    Equation: ${result.equation}
+                    Exact Root: ${result.exact_root}
+                    Absolute Error: ${result.absolute_error}
+                `;
+                
+                document.getElementById('plot-container').innerHTML = 
+                    `<img src="${result.plot}" class="plot" alt="Graph">`;
+                
+            } catch (error) {
+                alert('Calculation failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

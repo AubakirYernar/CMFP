@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 8 - Trapezoidal Rule</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-group { margin: 10px 0; }
+        input, button { padding: 8px; margin: 5px; }
+        .error { color: red; }
+        .plot { max-width: 100%; margin: 20px 0; }
+        .result-box { padding: 15px; border: 1px solid #ddd; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='task7.html'">Previous</button>
+        <button onclick="location.href='index.html'">Home</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 8: Trapezoidal Integration</h2>
+        
+        <div class="input-group">
+            <input type="number" id="a" step="any" placeholder="Lower limit (a)" required>
+            <input type="number" id="b" step="any" placeholder="Upper limit (b)" required>
+        </div>
+        
+        <div class="input-group">
+            <input type="number" id="n" min="1" value="4" placeholder="Number of intervals" required>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="func" placeholder="f(x) (e.g., x**2 + sin(x))" 
+                   style="width: 300px;" required>
+        </div>
+        
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="error" class="error"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function calculate() {
+            const data = {
+                a: document.getElementById('a').value,
+                b: document.getElementById('b').value,
+                n: document.getElementById('n').value,
+                func: document.getElementById('func').value
+            };
+
+            try {
+                const response = await fetch('/task8', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if(result.error) {
+                    document.getElementById('error').innerHTML = result.error;
+                    document.getElementById('result').innerHTML = '';
+                    return;
+                }
+
+                let html = `
+                    <div class="result-box">
+                        <h3>Results:</h3>
+                        <p>Approximate: ${result.result.approximate}</p>
+                        <p>Exact value: ${result.result.exact}</p>
+                        <p>Error: ${result.result.error}</p>
+                    </div>
+                    <img src="${result.plot}" class="plot" alt="Integration plot">
+                `;
+                
+                document.getElementById('result').innerHTML = html;
+                document.getElementById('error').innerHTML = '';
+                
+            } catch(error) {
+                document.getElementById('error').innerHTML = error.message;
+            }
+        }
+    </script>
+</body>
+</html>

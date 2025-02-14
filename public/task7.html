@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task 7 - Derivative</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-group { margin: 10px 0; }
+        input { padding: 5px; margin: 5px; width: 200px; }
+        table { border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .plot { max-width: 100%; margin: 20px 0; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <button onclick="location.href='task6.html'">Previous</button>
+        <button onclick="location.href='index.html'">Home</button>
+        <button onclick="location.href='task8.html'">Next</button>
+    </div>
+
+    <div class="container">
+        <h2>Task 7: Numerical Derivative</h2>
+        
+        <div class="input-group">
+            <label>X values (space-separated):</label>
+            <input type="text" id="x_input" placeholder="0 1 2">
+        </div>
+        
+        <div class="input-group">
+            <label>Y values (space-separated):</label>
+            <input type="text" id="y_input" placeholder="1 8 27">
+        </div>
+        
+        <div class="input-group">
+            <label>Derivative point:</label>
+            <input type="number" id="x_deriv" step="any" value="1">
+        </div>
+        
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="error" class="error"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function calculate() {
+            const x = document.getElementById('x_input').value.split(' ').map(Number);
+            const y = document.getElementById('y_input').value.split(' ').map(Number);
+            const x_deriv = parseFloat(document.getElementById('x_deriv').value);
+
+            const data = {
+                x: x,
+                y: y,
+                x_deriv: x_deriv
+            };
+
+            try {
+                const response = await fetch('/task7', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if(result.error) {
+                    document.getElementById('error').innerHTML = result.error;
+                    document.getElementById('result').innerHTML = '';
+                    return;
+                }
+
+                // Отображение таблицы
+                let tableHTML = '<h3>Difference Table</h3><table>';
+                const columns = Object.keys(result.table);
+                tableHTML += '<tr><th></th>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr>';
+                
+                for(let i = 0; i < result.table[columns[0]].length; i++) {
+                    tableHTML += `<tr><td>${i}</td>`;
+                    for(const col of columns) {
+                        tableHTML += `<td>${result.table[col][i].toFixed(4)}</td>`;
+                    }
+                    tableHTML += '</tr>';
+                }
+                tableHTML += '</table>';
+
+                // Сборка результата
+                document.getElementById('result').innerHTML = `
+                    ${tableHTML}
+                    <h4>Derivative at x = ${x_deriv}: ${result.derivative}</h4>
+                    <img src="${result.plot}" class="plot" alt="Graph">
+                `;
+                
+            } catch(error) {
+                document.getElementById('error').innerHTML = error.message;
+            }
+        }
+    </script>
+</body>
+</html>
